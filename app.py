@@ -288,6 +288,7 @@ def api_product_detail(product_id):
 def health():
     return jsonify({"status": "ok", "application": "SHOPNEX"})
 
+init_db()
+
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True)
