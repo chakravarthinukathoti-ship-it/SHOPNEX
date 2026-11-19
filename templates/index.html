@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}SHOPNEX | Everyday shopping{% endblock %}
+{% block content %}
+<section class="hero">
+  <div><p class="eyebrow">SMART PICKS. SIMPLE SHOPPING.</p><h1>Find something<br><span>you’ll love.</span></h1>
+  <p class="hero-copy">Explore everyday essentials, tech and lifestyle picks at great prices.</p>
+  <a class="button light" href="#products">Explore products</a></div>
+  <div class="hero-art"><div class="hero-circle">SN</div><div class="floating-card">✦ New arrivals<br><strong>Just landed</strong></div></div>
+</section>
+<section class="section-head" id="products"><div><p class="eyebrow">OUR COLLECTION</p><h2>Popular products</h2></div>
+<form class="search-form" method="get" action="{{ url_for('home') }}">
+  <input name="q" value="{{ search }}" placeholder="Search products..." aria-label="Search products">
+  <select name="category"><option value="">All categories</option>{% for c in categories %}<option value="{{ c }}" {% if selected_category == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select>
+  <button class="button">Search</button>
+</form></section>
+<div class="product-grid">
+{% for product in products %}
+  <article class="product-card">
+    <a class="product-image" href="{{ url_for('product_detail', product_id=product.id) }}"><img src="{{ product.image }}" alt="{{ product.name }}" onerror="this.src='https://placehold.co/600x450?text=SHOPNEX'"></a>
+    <div class="product-info"><span class="category">{{ product.category }}</span><h3><a href="{{ url_for('product_detail', product_id=product.id) }}">{{ product.name }}</a></h3>
+    <p class="muted">{{ product.description }}</p><div class="product-bottom"><strong>₹{{ "%.2f"|format(product.price) }}</strong><form method="post" action="{{ url_for('add_to_cart', product_id=product.id) }}"><button class="button small">Add to cart</button></form></div></div>
+  </article>
+{% else %}<div class="empty-state">No products match your search. Try another keyword.</div>{% endfor %}
+</div>
+{% endblock %}

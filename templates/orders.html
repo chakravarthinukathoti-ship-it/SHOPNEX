@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Track orders | SHOPNEX{% endblock %}
+{% block content %}
+<p class="eyebrow">ORDER LOOKUP</p><h1 class="page-title">Track your orders</h1>
+<form class="search-form order-search" method="get"><input type="email" name="email" value="{{ email }}" placeholder="Enter the email used at checkout" required><button class="button">Find orders</button></form>
+{% if email %}{% if orders %}<div class="orders-list">{% for order in orders %}<article class="order-card"><div><span class="category">ORDER #{{ order.id }}</span><h3>{{ order.customer_name }}</h3><p class="muted">{{ order.created_at }}</p></div><div><strong>₹{{ "%.2f"|format(order.total) }}</strong><p><span class="status">{{ order.status }}</span></p></div></article>{% endfor %}</div>{% else %}<p class="empty-state">No orders found for that email address.</p>{% endif %}{% endif %}
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Your cart | SHOPNEX{% endblock %}
+{% block content %}
+<p class="eyebrow">YOUR BAG</p><h1 class="page-title">Shopping cart</h1>
+{% if items %}
+<form method="post" action="{{ url_for('update_cart') }}"><div class="cart-list">
+{% for item in items %}<div class="cart-row"><div class="cart-product"><img src="{{ item.product.image }}" alt=""><div><strong>{{ item.product.name }}</strong><span class="muted">₹{{ "%.2f"|format(item.product.price) }} each</span></div></div><label>Qty <input type="number" min="0" max="{{ item.product.stock }}" name="quantity_{{ item.product.id }}" value="{{ item.quantity }}"></label><strong>₹{{ "%.2f"|format(item.subtotal) }}</strong><button class="text-button" type="submit" formaction="{{ url_for('remove_from_cart', product_id=item.product.id) }}" formmethod="post">Remove</button></div>{% endfor %}
+</div><div class="cart-actions"><button class="button secondary">Update cart</button><div class="total">Total <strong>₹{{ "%.2f"|format(total) }}</strong></div><a class="button" href="{{ url_for('checkout') }}">Proceed to checkout</a></div></form>
+{% else %}<div class="empty-state"><div class="empty-icon">🛍️</div><h2>Your cart is empty</h2><p class="muted">Add a few things you like and they’ll appear here.</p><a class="button" href="{{ url_for('home') }}">Start shopping</a></div>{% endif %}
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Checkout | SHOPNEX{% endblock %}
+{% block content %}
+<p class="eyebrow">ALMOST YOURS</p><h1 class="page-title">Checkout</h1>
+<div class="checkout-layout"><form class="form-card" method="post"><h2>Delivery details</h2>
+<label>Full name<input name="customer_name" required placeholder="Your name"></label>
+<label>Email address<input type="email" name="email" required placeholder="you@example.com"></label>
+<label>Delivery address<textarea name="address" rows="4" required placeholder="House no., street, city, PIN code"></textarea></label>
+<p class="muted small-note">Demo checkout: no real payment will be collected.</p><button class="button full">Place demo order</button></form>
+<aside class="summary-card"><h2>Order summary</h2>{% for item in items %}<div class="summary-line"><span>{{ item.product.name }} × {{ item.quantity }}</span><strong>₹{{ "%.2f"|format(item.subtotal) }}</strong></div>{% endfor %}<div class="summary-total"><span>Total</span><strong>₹{{ "%.2f"|format(total) }}</strong></div></aside></div>
+{% endblock %}
