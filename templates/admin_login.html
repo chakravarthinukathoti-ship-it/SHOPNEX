@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}Admin Login | SHOPNEX{% endblock %}
+{% block content %}
+<section class="admin-auth"><p class="eyebrow">SHOPNEX CONTROL CENTER</p><h1 class="page-title">Admin login</h1><p class="muted">Sign in to manage products, inventory and customer orders.</p><form class="form-card" method="post"><label>Username<input name="username" required autocomplete="username"></label><label>Password<input name="password" type="password" required autocomplete="current-password"></label><button class="button full" type="submit">Sign in to dashboard</button></form><p class="muted small-note">Demo login: admin / ShopNex@2026!</p><a class="muted" href="{{ url_for('home') }}">← Back to shop</a></section>
+{% endblock %}

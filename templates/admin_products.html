@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}Manage Products | SHOPNEX{% endblock %}
+{% block content %}
+<div class="admin-heading"><div><p class="eyebrow">STORE MANAGEMENT</p><h1 class="page-title">Products & inventory</h1></div><a class="button" href="{{ url_for('admin_product_form') }}">+ Add product</a></div>
+<div class="admin-nav"><a href="{{ url_for('admin_dashboard') }}">Overview</a><a class="active" href="{{ url_for('admin_products') }}">Products & inventory</a><a href="{{ url_for('admin_orders') }}">Orders</a><a href="{{ url_for('home') }}">View storefront ↗</a></div>
+<div class="admin-panel"><div class="table-wrap"><table class="admin-table"><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead><tbody>{% for p in products %}<tr><td class="admin-product"><img src="{{ p.image }}" alt=""><span>{{ p.name }}<small>#{{ p.id }}</small></span></td><td>{{ p.category }}</td><td>₹{{ '%.2f'|format(p.price) }}</td><td><span class="{% if p.stock <= 5 %}low-stock{% endif %}">{{ p.stock }}</span></td><td class="admin-actions"><a class="button secondary small" href="{{ url_for('admin_product_form', product_id=p.id) }}">Edit</a><form method="post" action="{{ url_for('admin_delete_product', product_id=p.id) }}" onsubmit="return confirm('Delete this product?')"><button class="button danger small" type="submit">Delete</button></form></td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}
