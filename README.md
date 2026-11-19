@@ -56,3 +56,12 @@ The SQLite database `shopnex.db` is created automatically on first run and 60 sa
 This is the clean baseline version. Keep an untouched copy before introducing deliberate bugs. The project contains real server-side routes, SQL queries, validation, stock checks and order persistence, so it can be used for both static source-code analysis and runtime testing.
 
 This is a student demonstration project, not a production payment system. It does not collect real payments or implement production-grade user authentication, CSRF protection, or deployment secrets.
+
+
+## Admin dashboard
+- Open `/admin` and sign in.
+- Demo username: `admin`
+- Demo password: `ShopNex@2026!`
+- Dashboard: `/admin/dashboard`
+- Before public/production use, set `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `SECRET_KEY` as environment variables in Render. Use strong unique values; do not keep the demo credentials.
+- This is a capstone demo admin area. Add CSRF protection, rate limiting, HTTPS enforcement, and persistent database storage before production use.

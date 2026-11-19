@@ -1,9 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import sqlite3
 from pathlib import Path
+import os
+import hmac
+from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = "shopnex-demo-secret-key"
+app.secret_key = os.environ.get("SECRET_KEY", "change-this-shopnex-secret-key-before-production")
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "ShopNex@2026!")
 DB_PATH = Path(__file__).with_name("shopnex.db")
 
 def get_db():
@@ -268,6 +273,128 @@ def orders():
         with get_db() as db:
             results = db.execute("SELECT * FROM orders WHERE email = ? ORDER BY created_at DESC", (email,)).fetchall()
     return render_template("orders.html", orders=results, email=email)
+
+
+
+def admin_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not session.get("is_admin"):
+            return redirect(url_for("admin_login", next=request.path))
+        return view(*args, **kwargs)
+    return wrapped
+
+
+@app.route("/admin", methods=["GET", "POST"])
+def admin_login():
+    if session.get("is_admin"):
+        return redirect(url_for("admin_dashboard"))
+    if request.method == "POST":
+        username = request.form.get("username", "")
+        password = request.form.get("password", "")
+        if hmac.compare_digest(username, ADMIN_USERNAME) and hmac.compare_digest(password, ADMIN_PASSWORD):
+            session["is_admin"] = True
+            flash("Welcome to the admin dashboard.", "success")
+            return redirect(request.args.get("next") or url_for("admin_dashboard"))
+        flash("Invalid admin username or password.", "error")
+    return render_template("admin_login.html")
+
+
+@app.post("/admin/logout")
+@admin_required
+def admin_logout():
+    session.pop("is_admin", None)
+    flash("You have been logged out.", "success")
+    return redirect(url_for("admin_login"))
+
+
+@app.route("/admin/dashboard")
+@admin_required
+def admin_dashboard():
+    with get_db() as db:
+        stats = {
+            "products": db.execute("SELECT COUNT(*) FROM products").fetchone()[0],
+            "orders": db.execute("SELECT COUNT(*) FROM orders").fetchone()[0],
+            "revenue": db.execute("SELECT COALESCE(SUM(total), 0) FROM orders").fetchone()[0],
+            "low_stock": db.execute("SELECT COUNT(*) FROM products WHERE stock <= 5").fetchone()[0],
+        }
+        recent_orders = db.execute("SELECT * FROM orders ORDER BY created_at DESC LIMIT 8").fetchall()
+    return render_template("admin_dashboard.html", stats=stats, recent_orders=recent_orders)
+
+
+@app.route("/admin/products")
+@admin_required
+def admin_products():
+    with get_db() as db:
+        products = db.execute("SELECT * FROM products ORDER BY id DESC").fetchall()
+    return render_template("admin_products.html", products=products)
+
+
+@app.route("/admin/products/new", methods=["GET", "POST"])
+@app.route("/admin/products/<int:product_id>/edit", methods=["GET", "POST"])
+@admin_required
+def admin_product_form(product_id=None):
+    product = None
+    with get_db() as db:
+        if product_id is not None:
+            product = db.execute("SELECT * FROM products WHERE id = ?", (product_id,)).fetchone()
+            if product is None:
+                flash("Product not found.", "error")
+                return redirect(url_for("admin_products"))
+        if request.method == "POST":
+            name = request.form.get("name", "").strip()
+            description = request.form.get("description", "").strip()
+            category = request.form.get("category", "").strip()
+            image = request.form.get("image", "").strip()
+            try:
+                price = float(request.form.get("price", ""))
+                stock = int(request.form.get("stock", ""))
+            except ValueError:
+                flash("Enter a valid price and stock quantity.", "error")
+                return render_template("admin_product_form.html", product=product)
+            if not all([name, description, category, image]) or price < 0 or stock < 0:
+                flash("Complete all fields with valid non-negative price and stock.", "error")
+                return render_template("admin_product_form.html", product=product)
+            values = (name, description, price, category, image, stock)
+            if product_id is None:
+                db.execute("INSERT INTO products (name, description, price, category, image, stock) VALUES (?, ?, ?, ?, ?, ?)", values)
+                flash("Product added successfully.", "success")
+            else:
+                db.execute("UPDATE products SET name=?, description=?, price=?, category=?, image=?, stock=? WHERE id=?", values + (product_id,))
+                flash("Product updated successfully.", "success")
+            return redirect(url_for("admin_products"))
+    return render_template("admin_product_form.html", product=product)
+
+
+@app.post("/admin/products/<int:product_id>/delete")
+@admin_required
+def admin_delete_product(product_id):
+    with get_db() as db:
+        db.execute("DELETE FROM products WHERE id = ?", (product_id,))
+    flash("Product deleted.", "success")
+    return redirect(url_for("admin_products"))
+
+
+@app.route("/admin/orders")
+@admin_required
+def admin_orders():
+    with get_db() as db:
+        orders = db.execute("SELECT * FROM orders ORDER BY created_at DESC").fetchall()
+    return render_template("admin_orders.html", orders=orders)
+
+
+@app.post("/admin/orders/<int:order_id>/status")
+@admin_required
+def admin_update_order_status(order_id):
+    status = request.form.get("status", "")
+    allowed = {"Placed", "Processing", "Shipped", "Delivered", "Cancelled"}
+    if status not in allowed:
+        flash("Invalid order status.", "error")
+    else:
+        with get_db() as db:
+            db.execute("UPDATE orders SET status = ? WHERE id = ?", (status, order_id))
+        flash("Order status updated.", "success")
+    return redirect(url_for("admin_orders"))
 
 # Simple JSON API endpoints for Postman and capstone testing.
 @app.get("/api/products")
